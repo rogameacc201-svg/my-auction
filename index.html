@@ -38,6 +38,7 @@
         header h1 { margin: 0; font-size: 20px; color: var(--gold); letter-spacing: 2px; }
         #top-broadcast { font-size: 14px; color: var(--red); font-weight: bold; margin-top: 5px; }
 
+        /* 全體得標公告跳窗 */
         #win-popup-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.7);
             display: none; justify-content: center; align-items: center; z-index: 5000;
@@ -57,6 +58,27 @@
         .win-info { font-size: 18px; color: #eee; line-height: 1.6; }
         .winner-name { color: var(--green); font-weight: bold; font-size: 22px; }
 
+        /* 右下角取消按鈕樣式 */
+        #cancel-auction-btn {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 9999;
+            background: var(--red);
+            color: white;
+            border: 2px solid white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(255,0,0,0.4);
+            cursor: pointer;
+            display: none; /* 預設隱藏，登入後顯示 */
+            transition: transform 0.2s, background 0.2s;
+        }
+        #cancel-auction-btn:hover { background: #cc0000; transform: scale(1.05); }
+        #cancel-auction-btn:active { transform: scale(0.95); }
+
+        /* 通用介面 */
         #login-screen { position: fixed; inset: 0; background: #121212; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
         .login-box { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 10px; }
         #main-app { display: none; flex-wrap: wrap; padding: 15px; gap: 15px; justify-content: center; }
@@ -84,9 +106,11 @@
         <div id="top-broadcast">等待競標開始...</div>
     </header>
 
+    <button id="cancel-auction-btn" onclick="cancelCurrentAuction()">🚫 取消目前競標</button>
+
     <div id="win-popup-overlay">
         <div id="win-popup">
-            <span class="win-icon">🔨</span>
+            <span class="win-icon">👑</span>
             <div class="win-title">拍賣成交！</div>
             <div class="win-info" id="win-display-text"></div>
         </div>
@@ -155,7 +179,7 @@
     </div>
 
 <script>
-    // --- Firebase 配置 (請在此填寫正確配置) ---
+    // --- Firebase 配置 ---
     const firebaseConfig = {
   apiKey: "AIzaSyA19M2lU6BCbxtlSOOcYm1Z_tWrsfo2T4s",
   authDomain: "game-ffb82.firebaseapp.com",
@@ -171,7 +195,7 @@
     const db = firebase.database();
     
     let userData = { isGuest: true, name: "遊客", uid: null };
-    let serverTimeOffset = 0; // 與伺服器的時間差
+    let serverTimeOffset = 0;
     let localTimer = null;
 
     const auctionRef = db.ref('current_auction');
@@ -179,10 +203,7 @@
     const usersRef = db.ref('online_users');
     const historyRef = db.ref('auction_history');
 
-    // 獲取伺服器對時偏離值
-    db.ref(".info/serverTimeOffset").on("value", snap => {
-        serverTimeOffset = snap.val() || 0;
-    });
+    db.ref(".info/serverTimeOffset").on("value", snap => { serverTimeOffset = snap.val() || 0; });
 
     function loginWithGoogle() {
         auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).then(res => {
@@ -201,8 +222,12 @@
     function enterApp() {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'flex';
+        // 如果不是遊客，顯示管理與取消按鈕
+        if (!userData.isGuest) {
+            document.getElementById('admin-box').style.display = 'block';
+            document.getElementById('cancel-auction-btn').style.display = 'block';
+        }
         db.ref(".info/connected").on("value", snap => { if(snap.val()) registerMe(); });
-        if (!userData.isGuest) document.getElementById('admin-box').style.display = 'block';
         startSyncing();
     }
 
@@ -215,8 +240,20 @@
     function clearUserList() { if(confirm("重整名單？")) usersRef.remove().then(() => registerMe()); }
     function clearChat() { if(confirm("清空聊天？")) chatRef.remove(); }
 
+    // ⭐ 取消競標函數
+    function cancelCurrentAuction() {
+        auctionRef.once('value', snap => {
+            const data = snap.val();
+            if(!data || !data.active) return alert("目前沒有正在進行的拍賣");
+            
+            if(confirm(`確定要取消【${data.itemName}】的競標嗎？`)) {
+                auctionRef.update({ active: false, endTime: 0 });
+                chatRef.push({ name: "📢 系統", text: `⚠️ 拍賣【${data.itemName}】已被管理員取消！`, role: 'system' });
+            }
+        });
+    }
+
     function startSyncing() {
-        // 核心計時監聽
         auctionRef.on('value', snap => {
             const data = snap.val(); if(!data) return;
             document.getElementById('disp-item-name').innerText = data.itemName || "等待中...";
@@ -232,35 +269,25 @@
             document.getElementById('btn-launch').style.display = data.active ? 'none' : 'block';
             document.getElementById('btn-reset').style.display = (!data.active && isPub) ? 'block' : 'none';
 
-            // 啟動本地渲染計時器
             if(localTimer) clearInterval(localTimer);
             if(data.active && data.endTime) {
                 localTimer = setInterval(() => {
                     const now = Date.now() + serverTimeOffset;
                     const diff = Math.max(0, Math.floor((data.endTime - now) / 1000));
-                    
-                    const m = Math.floor(diff / 60);
-                    const s = diff % 60;
+                    const m = Math.floor(diff / 60); const s = diff % 60;
                     document.getElementById('disp-timer').innerText = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
-
-                    // 如果時間到了且我是發布者，由我來執行結標 (確保只有一個人發起結標請求)
-                    if(diff <= 0 && isPub) {
-                        clearInterval(localTimer);
-                        handleAuctionEnd();
-                    }
+                    if(diff <= 0 && isPub) { clearInterval(localTimer); handleAuctionEnd(); }
                 }, 1000);
             } else {
                 document.getElementById('disp-timer').innerText = "00:00";
             }
         });
 
-        // 歷史成交與跳窗
         historyRef.limitToLast(1).on('child_added', snap => {
             const h = snap.val();
             if ((Date.now() + serverTimeOffset - h.timestamp) < 5000) broadcastWinPopup(h);
         });
 
-        // 聊天與名單
         chatRef.limitToLast(50).on('child_added', snap => {
             const m = snap.val();
             if(m.role === 'system') document.getElementById('top-broadcast').innerText = `📢 ${m.text}`;
@@ -296,14 +323,10 @@
         const inc = parseInt(document.getElementById('set-min-increment').value) || 0;
         const unit = document.getElementById('set-unit').value || "金幣";
         if(!name || isNaN(price)) return alert("請填寫資訊");
-
         const now = Date.now() + serverTimeOffset;
-        const duration = 60 * 1000; // 1分鐘
-
         auctionRef.set({ 
             itemName: name, price: price, minIncrement: inc, unit: unit,
-            active: true, 
-            endTime: now + duration, // 存入絕對結束時間
+            active: true, endTime: now + 60000, 
             publisherName: userData.name, publisherUid: userData.uid, highestBidder: "無" 
         });
         chatRef.push({ name: "📢 系統", text: `新拍賣：【${name}】(1分鐘)`, role: 'system' });
@@ -313,19 +336,10 @@
         auctionRef.once('value', snap => {
             const data = snap.val();
             if(!data.active) return;
-            
             const now = Date.now() + serverTimeOffset;
             let newEndTime = data.endTime;
-            // 倒數 10 秒內出價，自動延長至 20 秒 (避免秒殺外掛)
-            if (data.endTime - now < 10000) {
-                newEndTime = now + 20000;
-            }
-
-            auctionRef.update({ 
-                price: amt, 
-                highestBidder: userData.name, 
-                endTime: newEndTime 
-            });
+            if (data.endTime - now < 10000) newEndTime = now + 20000;
+            auctionRef.update({ price: amt, highestBidder: userData.name, endTime: newEndTime });
             chatRef.push({ name: "🔨 競標", text: `${userData.name} 出價 $${amt.toLocaleString()} ${unit}`, role: 'system' });
         });
     }
@@ -334,14 +348,10 @@
         auctionRef.once('value', snap => {
             const data = snap.val();
             if(!data || !data.active) return;
-            
             auctionRef.update({ active: false });
             const winner = data.highestBidder;
             if(winner !== "無") {
-                historyRef.push({ 
-                    itemName: data.itemName, winner: winner, price: data.price, 
-                    unit: data.unit, timestamp: Date.now() + serverTimeOffset
-                });
+                historyRef.push({ itemName: data.itemName, winner: winner, price: data.price, unit: data.unit, timestamp: Date.now() + serverTimeOffset });
             }
             chatRef.push({ name: "📢 系統", text: winner === "無" ? "流標。" : `恭喜！【${winner}】中標`, role: 'system' });
         });
@@ -370,10 +380,8 @@
         const bid = parseInt(document.getElementById('bid-amount').value);
         auctionRef.once('value', snap => {
             const d = snap.val();
-            if(d.active && bid >= d.price + (d.minIncrement || 0)) {
-                executeBid(bid, d.unit);
-                document.getElementById('bid-amount').value = "";
-            } else alert("金額不足或拍賣已結束");
+            if(d.active && bid >= d.price + (d.minIncrement || 0)) { executeBid(bid, d.unit); document.getElementById('bid-amount').value = ""; }
+            else alert("金額不足或拍賣已結束");
         });
     }
 

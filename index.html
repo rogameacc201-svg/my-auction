@@ -38,7 +38,7 @@
         header h1 { margin: 0; font-size: 20px; color: var(--gold); letter-spacing: 2px; }
         #top-broadcast { font-size: 14px; color: var(--red); font-weight: bold; margin-top: 5px; }
 
-        /* 🏆 得標成功專用跳窗 (無按鈕版) */
+        /* 🏆 全體得標公告跳窗 */
         #win-popup-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.7);
             display: none; justify-content: center; align-items: center; z-index: 5000;
@@ -50,14 +50,15 @@
             padding: 40px; text-align: center; max-width: 400px; width: 90%;
             box-shadow: 0 0 100px rgba(255, 204, 0, 0.6);
             transform: scale(0.7); opacity: 0; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            pointer-events: none; /* 防止遮擋點擊 */
+            pointer-events: none;
         }
         #win-popup.show { transform: scale(1); opacity: 1; }
         .win-icon { font-size: 60px; margin-bottom: 15px; display: block; }
         .win-title { color: var(--gold); font-size: 32px; font-weight: bold; margin-bottom: 10px; text-shadow: 0 0 15px rgba(255,204,0,0.5); }
         .win-info { font-size: 18px; color: #eee; line-height: 1.6; }
+        .winner-name { color: var(--green); font-weight: bold; font-size: 22px; }
 
-        /* 通用介面樣式 */
+        /* 通用介面 */
         #login-screen { position: fixed; inset: 0; background: #121212; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
         .login-box { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 10px; }
         #main-app { display: none; flex-wrap: wrap; padding: 15px; gap: 15px; justify-content: center; }
@@ -87,8 +88,8 @@
 
     <div id="win-popup-overlay">
         <div id="win-popup">
-            <span class="win-icon">🎉</span>
-            <div class="win-title">得標成功！</div>
+            <span class="win-icon">🔨</span>
+            <div class="win-title">拍賣成交！</div>
             <div class="win-info" id="win-display-text"></div>
         </div>
     </div>
@@ -153,7 +154,7 @@
     </div>
 
 <script>
-    // --- Firebase 配置 ---
+    // --- Firebase 配置 (請確保在此處填寫您的正確配置) ---
     const firebaseConfig = {
   apiKey: "AIzaSyA19M2lU6BCbxtlSOOcYm1Z_tWrsfo2T4s",
   authDomain: "game-ffb82.firebaseapp.com",
@@ -238,13 +239,12 @@
             }
         });
 
-        // 監聽歷史成交，觸發得標跳窗
+        // 監聽歷史成交，觸發全體跳窗
         historyRef.limitToLast(1).on('child_added', snap => {
             const h = snap.val();
-            // 檢查是否為當前用戶，且這筆成交紀錄是剛剛產生的（10秒內）
-            const isJustNow = (Date.now() - h.timestamp) < 10000;
-            if (h.winner === userData.name && isJustNow) {
-                showWinPopup(h);
+            const isJustNow = (Date.now() - h.timestamp) < 5000;
+            if (isJustNow) {
+                broadcastWinPopup(h);
             }
         });
 
@@ -280,20 +280,22 @@
         });
     }
 
-    // ⭐ 修改後的自動消失跳窗
-    function showWinPopup(h) {
-        document.getElementById('win-display-text').innerHTML = `您成功標得 <b>【${h.itemName}】</b>！<br>成交價：$${h.price.toLocaleString()} ${h.unit}`;
+    // ⭐ 修改後的廣播函數：延遲改為 3000ms (3秒)
+    function broadcastWinPopup(h) {
+        const text = `恭喜玩家 <span class="winner-name">${h.winner}</span><br>標得 <b>【${h.itemName}】</b>！<br>金額：$${h.price.toLocaleString()} ${h.unit}`;
+        document.getElementById('win-display-text').innerHTML = text;
+        
         const overlay = document.getElementById('win-popup-overlay');
         const popup = document.getElementById('win-popup');
         
         overlay.style.display = 'flex';
         setTimeout(() => popup.classList.add('show'), 10);
 
-        // 2 秒後自動隱藏
+        // 改為 3 秒後自動隱藏
         setTimeout(() => {
             popup.classList.remove('show');
             setTimeout(() => { overlay.style.display = 'none'; }, 400);
-        }, 2000);
+        }, 3000); 
     }
 
     function quickBid() {
@@ -332,12 +334,14 @@
         const inc = parseInt(document.getElementById('set-min-increment').value) || 0;
         const unit = document.getElementById('set-unit').value || "金幣";
         if(!name || isNaN(price)) return alert("請填寫資訊");
+        
+        // 初始時間設定為 60 秒
         auctionRef.set({ 
             itemName: name, price: price, minIncrement: inc, unit: unit,
-            active: true, timeLeft: 120, 
+            active: true, timeLeft: 60, 
             publisherName: userData.name, publisherUid: userData.uid, highestBidder: "無" 
         });
-        chatRef.push({ name: "📢 系統", text: `新拍賣：【${name}】(2分鐘)`, role: 'system' });
+        chatRef.push({ name: "📢 系統", text: `新拍賣：【${name}】(1分鐘)`, role: 'system' });
     }
 
     function handleAuctionEnd() {

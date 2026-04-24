@@ -315,7 +315,7 @@
             if(winner !== "無") {
                 historyRef.push({ itemName: data.itemName, winner: winner, price: data.price, unit: data.unit, timestamp: Date.now() + serverTimeOffset });
             }
-            chatRef.push({ name: "📢 系統", text: winner === "無" ? "流標。" : `恭喜！【${winner}】中標`, role: 'system' });
+            chatRef.push({ name: "📢 系統", text: winner === "無" ? "好可憐，沒人搶標。" : `恭喜！【${winner}】恭喜得標`, role: 'system' });
         });
     }
 

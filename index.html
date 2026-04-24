@@ -3,82 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🏆 輕鬆玩天堂-拍賣行</title>
+    <title>🏆 拍賣行</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
 
     <style>
-        :root { --gold: #ffcc00; --bg: #121212; --card: #1e1e1e; --red: #ff4444; --nav-h: 70px; --green: #00ff88; }
+        :root { --gold: #ffcc00; --bg: #121212; --card: #1e1e1e; --red: #ff4444; --nav-h: 75px; --green: #00ff88; --blue: #0088ff; }
         * { box-sizing: border-box; }
-        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg); color: white; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
 
-        /* 頂部至頂廣播 */
+        /* --- 頂部至頂：即時通知 --- */
         header {
             height: var(--nav-h); background: #000; border-bottom: 2px solid var(--gold);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            position: sticky; top: 0; z-index: 1500;
+            position: sticky; top: 0; z-index: 1500; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
         header h1 { margin: 0; font-size: 18px; color: var(--gold); letter-spacing: 2px; }
-        #top-broadcast { font-size: 14px; color: var(--red); font-weight: bold; margin-top: 5px; }
+        #top-broadcast { font-size: 14px; color: var(--red); font-weight: bold; margin-top: 5px; transition: color 0.3s; }
 
-        /* 登入介面 */
+        /* --- 登入畫面 --- */
         #login-screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
         .login-box { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 10px; }
 
-        /* 主佈局容器 */
+        /* --- 主佈局 --- */
         #main-app { display: none; flex-wrap: wrap; padding: 15px; gap: 15px; justify-content: center; }
         
-        /* 🚩 左側欄：整合玩家與聊天 */
-        .sidebar-left { width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 15px; }
-        .user-panel { background: var(--card); border-radius: 12px; border: 1px solid #333; height: 180px; display: flex; flex-direction: column; overflow: hidden; }
-        .chat-panel { background: var(--card); border-radius: 12px; border: 1px solid #333; height: 350px; display: flex; flex-direction: column; overflow: hidden; }
+        /* 左側欄：在線名單 + 聊天室 */
+        .sidebar-left { width: 100%; max-width: 280px; display: flex; flex-direction: column; gap: 15px; }
+        .user-panel { background: var(--card); border-radius: 12px; border: 1px solid #333; height: 180px; display: flex; flex-direction: column; }
+        .chat-panel { background: var(--card); border-radius: 12px; border: 1px solid #333; height: 350px; display: flex; flex-direction: column; }
 
-        /* 🚩 右側：成交歷史 */
-        .history-panel { width: 100%; max-width: 300px; background: var(--card); border-radius: 12px; border: 1px solid #333; height: 545px; display: flex; flex-direction: column; overflow: hidden; }
+        /* 中間：拍賣核心 */
+        .auction-container { flex: 1; min-width: 320px; max-width: 480px; display: flex; flex-direction: column; gap: 10px; }
+        
+        /* 右側：成交歷史 */
+        .history-panel { width: 100%; max-width: 280px; background: var(--card); border-radius: 12px; border: 1px solid #333; height: 545px; display: flex; flex-direction: column; }
 
-        /* 🚩 中間：拍賣核心 */
-        .auction-container { flex: 1; min-width: 320px; max-width: 500px; display: flex; flex-direction: column; gap: 10px; }
-
-        /* 滾動區域優化 */
-        .scroll-area { flex: 1; overflow-y: auto; padding: 10px; scroll-behavior: smooth; }
-        .scroll-area::-webkit-scrollbar { width: 5px; }
+        /* 共通樣式 */
+        .panel-title { padding: 10px; background: #000; font-size: 12px; color: var(--gold); border-bottom: 1px solid #333; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .scroll-area { flex: 1; overflow-y: auto; padding: 10px; scroll-behavior: smooth; font-size: 13px; }
+        .scroll-area::-webkit-scrollbar { width: 4px; }
         .scroll-area::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
 
-        /* 內容樣式 */
-        .panel-title { padding: 10px; background: #000; font-size: 12px; color: var(--gold); border-bottom: 1px solid #333; font-weight: bold; }
-        .history-item { background: #252525; padding: 8px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid var(--green); font-size: 12px; }
-        .msg-line { font-size: 13px; margin-bottom: 5px; border-bottom: 1px solid #222; padding-bottom: 3px; }
-
-        .auction-card { background: var(--card); padding: 25px; border-radius: 20px; text-align: center; border: 1px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .timer { font-size: 45px; color: var(--red); font-family: monospace; background: #000; margin: 15px 0; border-radius: 10px; border: 1px solid #333; padding: 10px; }
-        .price-tag { font-size: 30px; color: var(--green); font-weight: bold; margin-bottom: 10px; }
+        /* 卡片內容樣式 */
+        .msg-line { margin-bottom: 6px; border-bottom: 1px solid #222; padding-bottom: 3px; line-height: 1.4; }
+        .history-item { background: #252525; padding: 8px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid var(--green); }
         
-        input { padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; width: 100%; font-size: 15px; }
-        .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .auction-card { background: var(--card); padding: 25px; border-radius: 20px; text-align: center; border: 1px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .timer { font-size: 45px; color: var(--red); font-family: monospace; background: #000; margin: 15px 0; border-radius: 10px; padding: 10px; border: 1px solid #333; }
+        .price-tag { font-size: 32px; color: var(--green); font-weight: bold; }
+        
+        input { padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; width: 100%; font-size: 15px; outline: none; }
+        input:focus { border-color: var(--gold); }
+        .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .btn:active { transform: scale(0.98); }
         .btn-gold { background: var(--gold); color: black; }
-        .btn-blue { background: #0088ff; color: white; margin-top: 8px; width: 100%; }
+        .btn-blue { background: var(--blue); color: white; margin-top: 8px; width: 100%; }
+        .btn-small { font-size: 10px; padding: 2px 6px; background: #333; color: #ccc; border: 1px solid #555; }
 
-        @media (min-width: 1200px) {
-            #main-app { flex-wrap: nowrap; }
-        }
+        @media (min-width: 1200px) { #main-app { flex-wrap: nowrap; } }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🏆 輕鬆玩天堂-拍賣行</h1>
-        <div id="top-broadcast">請等待開標...</div>
+        <h1>🏆 拍賣行</h1>
+        <div id="top-broadcast">準備中...</div>
     </header>
 
     <div id="login-screen">
-        <h1 style="color: var(--gold);">🏆 輕鬆玩天堂-拍賣行</h1>
+        <h1 style="color: var(--gold);">🏆 拍賣行</h1>
         <div class="login-box">
-            <button class="btn" style="background:white; color:#333;" onclick="loginWithGoogle()">Google 帳號登入</button>
+            <button class="btn" style="background:white; color:#333;" onclick="loginWithGoogle()">Google 登入</button>
             <div style="border-top:1px solid #333; margin-top:10px; padding-top:20px; display:flex; flex-direction:column; gap:10px;">
-                <input type="text" id="guest-name-input" placeholder="輸入暱稱...">
-                <button class="btn" style="background:#444; color:white;" onclick="enterAsGuest()">遊客登入</button>
+                <input type="text" id="guest-name-input" placeholder="遊客暱稱...">
+                <button class="btn" style="background:#444; color:white;" onclick="enterAsGuest()">進入大廳</button>
             </div>
         </div>
     </div>
@@ -86,35 +87,37 @@
     <div id="main-app">
         <div class="sidebar-left">
             <div class="user-panel">
-                <div class="panel-title">👥 在線名單</div>
+                <div class="panel-title">
+                    <span>👥 在線玩家</span>
+                    <button class="btn-small" onclick="clearUserList()">重整</button>
+                </div>
                 <div id="user-list" class="scroll-area"></div>
             </div>
-            
             <div class="chat-panel">
-                <div class="panel-title">💬 玩家對話</div>
+                <div class="panel-title">💬 玩家聊天</div>
                 <div id="chat-msgs" class="scroll-area"></div>
                 <div style="padding:10px; border-top:1px solid #333; background:#1a1a1a;">
-                    <input type="text" id="chat-input" placeholder="發言..." onkeypress="if(event.keyCode==13) sendChat()" style="margin:0;">
+                    <input type="text" id="chat-input" placeholder="說點什麼..." onkeypress="if(event.keyCode==13) sendChat()" style="margin:0;">
                 </div>
             </div>
         </div>
 
         <div class="auction-container">
-            <div class="admin-panel" id="admin-box" style="display:none; background:#252525; padding:15px; border-radius:12px; border:1px dashed var(--gold);">
-                <input type="text" id="set-name" placeholder="商品名稱">
-                <div style="display:flex; gap:5px; margin-top:5px;">
+            <div class="admin-panel" id="admin-box" style="display:none; background:#252525; padding:15px; border-radius:12px; border:1px dashed var(--gold); margin-bottom:10px;">
+                <input type="text" id="set-name" placeholder="拍賣品名稱" style="margin-bottom:8px;">
+                <div style="display:flex; gap:5px;">
                     <input type="number" id="set-price" placeholder="起標底價">
-                    <input type="number" id="set-min-increment" placeholder="最小加價">
+                    <input type="number" id="set-min-increment" placeholder="加價幅度">
                 </div>
-                <button id="btn-launch" class="btn btn-gold" style="width:100%; margin-top:8px;" onclick="launchAuction()">發布拍賣</button>
-                <button id="btn-reset" class="btn" style="width:100%; background:var(--red); color:white; display:none; margin-top:5px;" onclick="resetAuction()">強制結標</button>
+                <button id="btn-launch" class="btn btn-gold" style="width:100%; margin-top:10px;" onclick="launchAuction()">正式發布拍賣</button>
+                <button id="btn-reset" class="btn" style="width:100%; background:var(--red); color:white; display:none; margin-top:5px;" onclick="resetAuction()">強制流標/重置</button>
             </div>
 
             <div class="auction-card">
-                <h2 id="disp-item-name" style="margin:0; color:var(--gold);">等待開標...</h2>
+                <h2 id="disp-item-name" style="margin:0; color:var(--gold);">等待發布</h2>
                 <div class="timer" id="disp-timer">00:00</div>
-                <div class="price-tag">$ <span id="disp-price">0</span> <span id="disp-unit"></span></div>
-                <div id="disp-min-bid" style="font-size:13px; color:#aaa; margin-bottom:10px;">-</div>
+                <div class="price-tag">$ <span id="disp-price">0</span> <span id="disp-unit">金幣</span></div>
+                <div id="disp-min-bid" style="font-size:13px; color:#aaa; margin:10px 0;">-</div>
                 <div style="display:flex; gap:8px;">
                     <input type="number" id="bid-amount" placeholder="金額..." style="flex:1; margin:0;">
                     <button class="btn btn-gold" onclick="submitBid()">出價</button>
@@ -124,7 +127,7 @@
         </div>
 
         <div class="history-panel">
-            <div class="panel-title" style="color:var(--green);">📜 成交紀錄</div>
+            <div class="panel-title" style="color:var(--green);">📜 結標紀錄紀錄</div>
             <div id="history-list" class="scroll-area"></div>
         </div>
     </div>
@@ -142,6 +145,7 @@
   measurementId: "G-VJ086JK4QN"
 };
 
+    
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
@@ -154,6 +158,7 @@
     const usersRef = db.ref('online_users');
     const historyRef = db.ref('auction_history');
 
+    // --- 登入機制 ---
     function loginWithGoogle() {
         auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).then(res => {
             userData = { isGuest: false, name: res.user.displayName, uid: res.user.uid };
@@ -169,41 +174,40 @@
     }
 
     function enterApp() {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('main-app').style.display = 'flex';
-    
-    // 1. 建立一個專屬的在線節點
-    const myUserRef = usersRef.push();
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'flex';
+        
+        // 註冊在線監聽
+        db.ref(".info/connected").on("value", (snap) => {
+            if (snap.val() === true) registerMe();
+        });
 
-    // 2. 當連線狀態改變時觸發
-    db.ref(".info/connected").on("value", (snap) => {
-        if (snap.val() === true) {
-            // 當連線成功時，設定自己的資訊
-            myUserRef.set({ 
-                name: userData.name, 
-                uid: userData.uid,
-                loginTime: Date.now() 
-            });
+        if (!userData.isGuest) document.getElementById('admin-box').style.display = 'block';
+        startSyncing();
+    }
 
-            // 重要：設定當「離線」時，自動刪除這個節點
-            myUserRef.onDisconnect().remove();
-        }
-    });
+    function registerMe() {
+        const myUserRef = usersRef.push();
+        myUserRef.set({ name: userData.name, uid: userData.uid });
+        myUserRef.onDisconnect().remove();
+    }
 
-    if (!userData.isGuest) document.getElementById('admin-box').style.display = 'block';
-    startSyncing();
-}
+    function clearUserList() {
+        if(!confirm("確定要強制清空並重新整理名單嗎？")) return;
+        usersRef.remove().then(() => registerMe());
+    }
 
+    // --- 同步機制 ---
     function startSyncing() {
+        // 拍賣同步
         auctionRef.on('value', snap => {
             const data = snap.val(); if(!data) return;
             document.getElementById('disp-item-name').innerText = data.itemName;
             document.getElementById('disp-price').innerText = data.price.toLocaleString();
-            document.getElementById('disp-unit').innerText = data.unit || "金幣";
             document.getElementById('disp-timer').innerText = `00:${data.timeLeft < 10 ? '0'+data.timeLeft : data.timeLeft}`;
             const next = data.price + (data.minIncrement || 0);
-            document.getElementById('disp-min-bid').innerText = `最低出價：$${next.toLocaleString()}`;
-            document.getElementById('btn-quick-bid').innerText = `一鍵加價至 $${next.toLocaleString()}`;
+            document.getElementById('disp-min-bid').innerText = `最低需出：$${next.toLocaleString()}`;
+            document.getElementById('btn-quick-bid').innerText = `快速加價至 $${next.toLocaleString()}`;
             
             const isPub = (auth.currentUser && auth.currentUser.uid === data.publisherUid);
             document.getElementById('btn-launch').style.display = data.active ? 'none' : 'block';
@@ -217,10 +221,14 @@
             }
         });
 
+        // 聊天 & 廣播同步
         chatRef.limitToLast(50).on('child_added', snap => {
             const m = snap.val();
             if(m.role === 'system') {
-                document.getElementById('top-broadcast').innerText = `📢 ${m.text}`;
+                const top = document.getElementById('top-broadcast');
+                top.innerText = `📢 ${m.text}`;
+                top.style.color = 'var(--green)';
+                setTimeout(() => top.style.color = 'var(--red)', 1000);
             } else {
                 const box = document.getElementById('chat-msgs');
                 const div = document.createElement('div');
@@ -231,78 +239,72 @@
             }
         });
 
+        // 歷史紀錄同步
         historyRef.limitToLast(50).on('child_added', snap => {
             const h = snap.val();
-            const histBox = document.getElementById('history-list');
+            const box = document.getElementById('history-list');
             const div = document.createElement('div');
             div.className = "history-item";
-            div.innerHTML = `🏆 <b>${h.itemName}</b><br>${h.winner} / $${h.price}`;
-            histBox.appendChild(div);
-            histBox.scrollTop = histBox.scrollHeight;
+            div.innerHTML = `🏆 <b>${h.itemName}</b><br>${h.winner} / $${h.price.toLocaleString()}`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         });
 
+        // 在線人數同步
         usersRef.on('value', snap => {
-        const list = document.getElementById('user-list');
-        list.innerHTML = ""; // 先清空舊名單
-        
-        if (!snap.exists()) {
-            list.innerHTML = `<div style="padding:10px; color:#666; font-size:12px;">目前無人在此</div>`;
-            return;
-        }
-
-        snap.forEach(c => {
-            const user = c.val();
-            const div = document.createElement('div');
-            div.style.cssText = "padding:8px; font-size:13px; border-bottom:1px solid #222; display:flex; align-items:center; gap:5px;";
-            div.innerHTML = `<span>🟢</span> ${user.name}`;
-            list.appendChild(div);
+            const list = document.getElementById('user-list');
+            list.innerHTML = "";
+            snap.forEach(c => {
+                list.innerHTML += `<div style="padding:5px; border-bottom:1px solid #222;">🟢 ${c.val().name}</div>`;
+            });
         });
-        
-        // 自動捲動到名單最上方
-        list.scrollTop = 0;
-    });
-}
+    }
 
+    // --- 操作邏輯 ---
     function quickBid() {
-        if(userData.isGuest) return alert("遊客無法競標");
+        if(userData.isGuest) return alert("遊客無法參與競標");
         auctionRef.once('value', snap => {
             const d = snap.val();
-            executeBid(d.price + (d.minIncrement || 0), d.unit);
+            executeBid(d.price + (d.minIncrement || 0));
         });
     }
 
     function submitBid() {
-        if(userData.isGuest) return alert("遊客無法競標");
+        if(userData.isGuest) return alert("遊客無法參與競標");
         const bid = parseInt(document.getElementById('bid-amount').value);
         auctionRef.once('value', snap => {
             const d = snap.val();
-            if(bid >= d.price + (d.minIncrement || 0)) { executeBid(bid, d.unit); document.getElementById('bid-amount').value = ""; }
-            else alert("金額不足");
+            if(bid >= d.price + (d.minIncrement || 0)) {
+                executeBid(bid);
+                document.getElementById('bid-amount').value = "";
+            } else alert("出價金額不足！");
         });
     }
 
-    function executeBid(amt, unit) {
+    function executeBid(amt) {
         auctionRef.update({ price: amt, highestBidder: userData.name, timeLeft: 20 });
-        chatRef.push({ name: "🔨 競標", text: `${userData.name} 出價 ${amt} ${unit || ''}`, role: 'system' });
+        chatRef.push({ name: "🔨 競標", text: `${userData.name} 出價 $${amt.toLocaleString()}`, role: 'system' });
     }
 
     function launchAuction() {
         const name = document.getElementById('set-name').value;
         const price = parseInt(document.getElementById('set-price').value);
         const inc = parseInt(document.getElementById('set-min-increment').value) || 0;
-        if(!name || isNaN(price)) return alert("請填寫商品名稱與底價");
+        if(!name || isNaN(price)) return alert("請填入拍賣品與底價");
         auctionRef.set({ itemName: name, price: price, minIncrement: inc, active: true, timeLeft: 60, publisherUid: userData.uid, highestBidder: "無" });
-        chatRef.push({ name: "📢 系統", text: `【${name}】開標！`, role: 'system' });
+        chatRef.push({ name: "📢 系統", text: `新拍賣：【${name}】正式開始！`, role: 'system' });
     }
 
     function finishAuction(data) {
         auctionRef.update({ active: false });
         const winner = data.highestBidder;
-        chatRef.push({ name: "📢 系統", text: winner === "無" ? "流標" : `結標！【${winner}】得標`, role: 'system' });
+        const msg = winner === "無" ? "此物品遺憾流標。" : `結標！【${winner}】成功標得 ${data.itemName}！`;
+        chatRef.push({ name: "📢 系統", text: msg, role: 'system' });
         if(winner !== "無") historyRef.push({ itemName: data.itemName, winner: winner, price: data.price });
     }
 
-    function resetAuction() { if(confirm("重置？")) auctionRef.update({ active: false, timeLeft: 0 }); }
+    function resetAuction() { if(confirm("確定重置拍賣？")) auctionRef.update({ active: false, timeLeft: 0 }); }
+
     function sendChat() {
         const input = document.getElementById('chat-input');
         if(!input.value || userData.isGuest) return;

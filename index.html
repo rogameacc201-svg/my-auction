@@ -74,7 +74,7 @@
         .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
         .btn-gold { background: var(--gold); color: black; }
         .btn-blue { background: var(--blue); color: white; margin-top: 8px; width: 100%; }
-        .btn-small { font-size: 10px; padding: 2px 6px; background: #333; color: #ccc; border: 1px solid #555; }
+        .btn-small { font-size: 10px; padding: 2px 6px; background: #333; color: #ccc; border: 1px solid #555; cursor: pointer; }
 
         @media (min-width: 1200px) { #main-app { flex-wrap: nowrap; } }
     </style>
@@ -88,7 +88,7 @@
 
     <div id="win-popup-overlay">
         <div id="win-popup">
-            <span class="win-icon">🔨</span>
+            <span class="win-icon">👑</span>
             <div class="win-title">拍賣成交！</div>
             <div class="win-info" id="win-display-text"></div>
         </div>
@@ -113,7 +113,10 @@
                 <div id="user-list" class="scroll-area"></div>
             </div>
             <div class="chat-panel">
-                <div class="panel-title">💬 聊天室</div>
+                <div class="panel-title">
+                    <span>💬 聊天室</span>
+                    <button class="btn-small" onclick="clearChat()">清除</button>
+                </div>
                 <div id="chat-msgs" class="scroll-area"></div>
                 <div style="padding:10px; border-top:1px solid #444; background:rgba(0,0,0,0.3);">
                     <input type="text" id="chat-input" placeholder="說點什麼..." onkeypress="if(event.keyCode==13) sendChat()">
@@ -208,6 +211,16 @@
 
     function clearUserList() { if(confirm("重整名單？")) usersRef.remove().then(() => registerMe()); }
 
+    // ⭐ 清除聊天訊息功能
+    function clearChat() {
+        if(confirm("確定要清空所有聊天訊息嗎？")) {
+            chatRef.remove().then(() => {
+                document.getElementById('chat-msgs').innerHTML = "";
+                document.getElementById('top-broadcast').innerText = "聊天室已清空";
+            });
+        }
+    }
+
     function startSyncing() {
         auctionRef.on('value', snap => {
             const data = snap.val(); if(!data) return;
@@ -239,12 +252,18 @@
             }
         });
 
-        // 監聽歷史成交，觸發全體跳窗
         historyRef.limitToLast(1).on('child_added', snap => {
             const h = snap.val();
             const isJustNow = (Date.now() - h.timestamp) < 5000;
-            if (isJustNow) {
-                broadcastWinPopup(h);
+            if (isJustNow) { broadcastWinPopup(h); }
+        });
+
+        // 監聽聊天室，包含清除處理
+        chatRef.on('value', snap => {
+            const box = document.getElementById('chat-msgs');
+            if(!snap.exists()) {
+                box.innerHTML = ""; // 如果資料庫被刪除，清空畫面
+                return;
             }
         });
 
@@ -280,18 +299,13 @@
         });
     }
 
-    // ⭐ 修改後的廣播函數：延遲改為 3000ms (3秒)
     function broadcastWinPopup(h) {
         const text = `恭喜玩家 <span class="winner-name">${h.winner}</span><br>標得 <b>【${h.itemName}】</b>！<br>金額：$${h.price.toLocaleString()} ${h.unit}`;
         document.getElementById('win-display-text').innerHTML = text;
-        
         const overlay = document.getElementById('win-popup-overlay');
         const popup = document.getElementById('win-popup');
-        
         overlay.style.display = 'flex';
         setTimeout(() => popup.classList.add('show'), 10);
-
-        // 改為 3 秒後自動隱藏
         setTimeout(() => {
             popup.classList.remove('show');
             setTimeout(() => { overlay.style.display = 'none'; }, 400);
@@ -334,8 +348,6 @@
         const inc = parseInt(document.getElementById('set-min-increment').value) || 0;
         const unit = document.getElementById('set-unit').value || "金幣";
         if(!name || isNaN(price)) return alert("請填寫資訊");
-        
-        // 初始時間設定為 60 秒
         auctionRef.set({ 
             itemName: name, price: price, minIncrement: inc, unit: unit,
             active: true, timeLeft: 60, 
@@ -348,19 +360,13 @@
         auctionRef.once('value', snap => {
             const data = snap.val();
             if(!data || !data.active) return;
-            
             auctionRef.update({ active: false });
             const winner = data.highestBidder;
             const msg = winner === "無" ? "流標。" : `恭喜！【${winner}】標得 ${data.itemName}`;
             chatRef.push({ name: "📢 系統", text: msg, role: 'system' });
-            
             if(winner !== "無") {
                 historyRef.push({ 
-                    itemName: data.itemName, 
-                    winner: winner, 
-                    price: data.price, 
-                    unit: data.unit,
-                    timestamp: Date.now()
+                    itemName: data.itemName, winner: winner, price: data.price, unit: data.unit, timestamp: Date.now()
                 });
             }
         });

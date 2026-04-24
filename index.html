@@ -26,6 +26,7 @@
             color: white; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
             background-image: url('bg.png'); 
             background-size: cover; background-position: center; background-attachment: fixed; background-color: #000;
+            font-size: 17px; 
         }
 
         body::before { content: ""; position: fixed; inset: 0; background: var(--bg-overlay); z-index: -1; }
@@ -35,10 +36,10 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             position: sticky; top: 0; z-index: 1500;
         }
-        header h1 { margin: 0; font-size: 20px; color: var(--gold); letter-spacing: 2px; }
-        #top-broadcast { font-size: 14px; color: var(--red); font-weight: bold; margin-top: 5px; }
+        header h1 { margin: 0; font-size: 22px; color: var(--gold); letter-spacing: 2px; }
+        #top-broadcast { font-size: 16px; color: var(--red); font-weight: bold; margin-top: 5px; }
 
-        /* 全體得標公告跳窗 */
+        /* 得標跳窗 */
         #win-popup-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.7);
             display: none; justify-content: center; align-items: center; z-index: 5000;
@@ -53,10 +54,10 @@
             pointer-events: none;
         }
         #win-popup.show { transform: scale(1); opacity: 1; }
-        .win-icon { font-size: 60px; margin-bottom: 15px; display: block; }
-        .win-title { color: var(--gold); font-size: 32px; font-weight: bold; margin-bottom: 10px; text-shadow: 0 0 15px rgba(255,204,0,0.5); }
-        .win-info { font-size: 18px; color: #eee; line-height: 1.6; }
-        .winner-name { color: var(--green); font-weight: bold; font-size: 22px; }
+        .win-icon { font-size: 62px; margin-bottom: 15px; display: block; }
+        .win-title { color: var(--gold); font-size: 34px; font-weight: bold; margin-bottom: 10px; text-shadow: 0 0 15px rgba(255,204,0,0.5); }
+        .win-info { font-size: 20px; color: #eee; line-height: 1.6; }
+        .winner-name { color: var(--green); font-weight: bold; font-size: 24px; }
 
         /* 通用介面 */
         #login-screen { position: fixed; inset: 0; background: #121212; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
@@ -64,17 +65,25 @@
         #main-app { display: none; flex-wrap: wrap; padding: 15px; gap: 15px; justify-content: center; }
         .sidebar-left { width: 100%; max-width: 280px; display: flex; flex-direction: column; gap: 15px; }
         .user-panel, .chat-panel, .history-panel { background: var(--card); border-radius: 12px; border: 1px solid #444; backdrop-filter: blur(5px); display: flex; flex-direction: column; }
-        .user-panel { height: 180px; } .chat-panel { height: 350px; } .history-panel { width: 100%; max-width: 280px; height: 545px; }
-        .panel-title { padding: 10px; background: rgba(0,0,0,0.5); font-size: 12px; color: var(--gold); border-bottom: 1px solid #444; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .scroll-area { flex: 1; overflow-y: auto; padding: 10px; font-size: 13px; }
+        .user-panel { height: 180px; } .chat-panel { height: 350px; } .history-panel { width: 100%; max-width: 320px; height: 545px; } /* 微調寬度 */
+        
+        .panel-title { padding: 10px; background: rgba(0,0,0,0.5); font-size: 16px; color: var(--gold); border-bottom: 1px solid #444; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* 滾動區域字體優化 */
+        .scroll-area { flex: 1; overflow-y: auto; padding: 12px; font-size: 17px; line-height: 1.5; }
+        
+        /* 歷史成交內容大2號 (17->19) */
+        #history-list { font-size: 19px; }
+        
         .auction-card { background: var(--card); padding: 25px; border-radius: 20px; text-align: center; border: 1px solid var(--gold); box-shadow: 0 0 20px rgba(255,204,0,0.2); }
-        .timer { font-size: 45px; color: var(--red); font-family: monospace; background: #000; margin: 15px 0; border-radius: 10px; padding: 10px; border: 1px solid #333; }
-        .price-tag { font-size: 32px; color: var(--green); font-weight: bold; }
-        input { padding: 12px; border-radius: 8px; border: 1px solid #444; background: rgba(0,0,0,0.5); color: white; width: 100%; font-size: 15px; outline: none; }
-        .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .timer { font-size: 47px; color: var(--red); font-family: monospace; background: #000; margin: 15px 0; border-radius: 10px; padding: 10px; border: 1px solid #333; }
+        .price-tag { font-size: 34px; color: var(--green); font-weight: bold; }
+        
+        input { padding: 12px; border-radius: 8px; border: 1px solid #444; background: rgba(0,0,0,0.5); color: white; width: 100%; font-size: 17px; outline: none; }
+        .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 16px; }
         .btn-gold { background: var(--gold); color: black; }
         .btn-blue { background: var(--blue); color: white; margin-top: 8px; width: 100%; }
-        .btn-small { font-size: 10px; padding: 2px 6px; background: #333; color: #ccc; border: 1px solid #555; cursor: pointer; }
+        .btn-small { font-size: 13px; padding: 3px 8px; background: #333; color: #ccc; border: 1px solid #555; cursor: pointer; }
 
         @media (min-width: 1200px) { #main-app { flex-wrap: nowrap; } }
     </style>
@@ -96,7 +105,7 @@
 
     <div id="login-screen">
         <img src="bg.png" style="width: 150px; margin-bottom: 20px; border-radius: 20px;">
-        <h1 style="color: var(--gold); margin-bottom: 30px;">👑 輕鬆玩天堂-專業拍賣系統</h1>
+        <h1 style="color: var(--gold); margin-bottom: 30px; font-size: 32px;">👑 輕鬆玩天堂-專業拍賣系統</h1>
         <div class="login-box">
             <button class="btn" style="background:white; color:#333;" onclick="loginWithGoogle()">Google 登入</button>
             <div style="border-top:1px solid #333; margin-top:10px; padding-top:20px; display:flex; flex-direction:column; gap:10px;">
@@ -109,7 +118,7 @@
     <div id="main-app">
         <div class="sidebar-left">
             <div class="user-panel">
-                <div class="panel-title"><span>👥 在線名單</span></div>
+                <div class="panel-title"><span>👥 即時在線玩家</span></div>
                 <div id="user-list" class="scroll-area"></div>
             </div>
             <div class="chat-panel">
@@ -137,11 +146,11 @@
             </div>
 
             <div class="auction-card">
-                <h2 id="disp-item-name" style="margin:0; color:var(--gold);">等待開標...</h2>
-                <div id="disp-publisher" style="font-size:12px; color:#aaa;">發布者：-</div>
+                <h2 id="disp-item-name" style="margin:0; color:var(--gold); font-size: 28px;">等待開標...</h2>
+                <div id="disp-publisher" style="font-size:15px; color:#aaa;">發布者：-</div>
                 <div class="timer" id="disp-timer">00:00</div>
                 <div class="price-tag">$ <span id="disp-price">0</span> <span id="disp-unit">金幣</span></div>
-                <div id="disp-min-bid" style="font-size:13px; color:#ccc; margin:10px 0;">-</div>
+                <div id="disp-min-bid" style="font-size:16px; color:#ccc; margin:10px 0;">-</div>
                 <div style="display:flex; gap:8px;">
                     <input type="number" id="bid-amount" placeholder="金額..." style="flex:1;">
                     <button class="btn btn-gold" onclick="submitBid()">出價</button>
@@ -157,7 +166,6 @@
     </div>
 
 <script>
-    // --- Firebase 配置 ---
     const firebaseConfig = {
   apiKey: "AIzaSyA19M2lU6BCbxtlSOOcYm1Z_tWrsfo2T4s",
   authDomain: "game-ffb82.firebaseapp.com",
@@ -206,12 +214,10 @@
     }
 
     function registerMe() {
-        const myUserRef = usersRef.push();
+        const myUserRef = usersRef.child(userData.uid);
         myUserRef.set({ name: userData.name, uid: userData.uid });
         myUserRef.onDisconnect().remove();
     }
-
-    // 移除了 clearUserList 函數
 
     function clearChat() { if(confirm("清空聊天？")) chatRef.remove(); }
 
@@ -245,6 +251,17 @@
             }
         });
 
+        usersRef.on('value', snap => {
+            const listDiv = document.getElementById('user-list');
+            listDiv.innerHTML = "";
+            if(snap.exists()) {
+                snap.forEach(c => {
+                    const user = c.val();
+                    listDiv.innerHTML += `<div style="padding:10px 5px; border-bottom:1px solid rgba(255,255,255,0.05);">🟢 ${user.name}</div>`;
+                });
+            }
+        });
+
         historyRef.limitToLast(1).on('child_added', snap => {
             const h = snap.val();
             if ((Date.now() + serverTimeOffset - h.timestamp) < 5000) broadcastWinPopup(h);
@@ -256,26 +273,24 @@
             else {
                 const box = document.getElementById('chat-msgs');
                 const div = document.createElement('div');
+                div.style.marginBottom = "10px";
                 div.innerHTML = `<b style="color:${m.role==='guest'?'#888':'var(--gold)'}">${m.name}:</b> ${m.text}`;
                 box.appendChild(div);
                 box.scrollTop = box.scrollHeight;
             }
         });
-        chatRef.on('value', snap => { if(!snap.exists()) document.getElementById('chat-msgs').innerHTML = ""; });
 
         historyRef.on('value', snap => {
             const box = document.getElementById('history-list'); box.innerHTML = "";
             snap.forEach(child => {
                 const h = child.val();
                 const div = document.createElement('div');
-                div.innerHTML = `🏆 <b>${h.itemName}</b><br>${h.winner} / $${h.price.toLocaleString()} ${h.unit}`;
+                div.style.marginBottom = "15px"; // 增加歷史紀錄間距
+                div.style.borderBottom = "1px solid rgba(255,255,255,0.1)";
+                div.style.paddingBottom = "10px";
+                div.innerHTML = `🏆 <b style="color:var(--gold)">${h.itemName}</b><br><span style="color:#ddd; font-size:17px;">得標者: ${h.winner}</span><br><span style="color:var(--green)">$${h.price.toLocaleString()} ${h.unit}</span>`;
                 box.prepend(div);
             });
-        });
-
-        usersRef.on('value', snap => {
-            const list = document.getElementById('user-list'); list.innerHTML = "";
-            snap.forEach(c => { list.innerHTML += `<div style="padding:5px; border-bottom:1px solid rgba(255,255,255,0.05);">🟢 ${c.val().name}</div>`; });
         });
     }
 
@@ -315,7 +330,7 @@
             if(winner !== "無") {
                 historyRef.push({ itemName: data.itemName, winner: winner, price: data.price, unit: data.unit, timestamp: Date.now() + serverTimeOffset });
             }
-            chatRef.push({ name: "📢 系統", text: winner === "無" ? "好可憐，沒人搶標。" : `恭喜！【${winner}】恭喜得標`, role: 'system' });
+            chatRef.push({ name: "📢 系統", text: winner === "無" ? "流標。" : `恭喜！【${winner}】中標`, role: 'system' });
         });
     }
 
@@ -348,7 +363,7 @@
     }
 
     function resetAuction() {
-        if(!confirm("重置？")) return;
+        if(!confirm("重置版面？")) return;
         auctionRef.set({ active: false, endTime: 0, itemName: "等待開標", price: 0, publisherName: "-", highestBidder: "無" });
     }
 

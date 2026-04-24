@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>輕鬆玩天堂-拍賣行</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root { --gold: #ffcc00; --bg: #121212; --card: #1e1e1e; --red: #ff4444; }
+        * { box-sizing: border-box; }
+        body { 
+            background: var(--bg); color: white; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            margin: 0; padding: 0; overflow-x: hidden;
+        }
+
+        /* 登入介面 */
+        #login-screen { 
+            position: fixed; inset: 0; background: var(--bg); z-index: 2000; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;
+        }
+        .login-box { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 12px; }
+        .google-btn { background: white; color: #757575; padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .guest-btn { background: #333; color: white; padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+
+        /* 主佈局架構 */
+        #main-app { display: none; flex-wrap: wrap; padding: 10px; gap: 15px; justify-content: center; }
+
+        /* 側邊欄與聊天室 */
+        .sidebar, .chat-panel { 
+            width: 100%; max-width: 300px; background: var(--card); 
+            border-radius: 12px; border: 1px solid #333; height: 400px; 
+            display: flex; flex-direction: column; 
+        }
+
+        /* 拍賣核心區塊 */
+        .auction-container { 
+            flex: 1; min-width: 300px; max-width: 500px; 
+            display: flex; flex-direction: column; gap: 15px; order: -1; 
+        }
+
+        @media (min-width: 1024px) {
+            .auction-container { order: 0; }
+            #main-app { height: 100vh; padding: 20px; }
+            .sidebar, .chat-panel { height: calc(100vh - 40px); }
+        }
+
+        /* 卡片樣式 */
+        .admin-panel { background: #252525; padding: 15px; border-radius: 12px; border: 1px dashed var(--gold); }
+        .auction-card { background: var(--card); padding: 20px; border-radius: 20px; text-align: center; border: 1px solid #444; position: relative; }
+        .timer { font-size: 45px; color: var(--red); font-family: monospace; background: #000; margin: 15px 0; border-radius: 10px; padding: 5px; }
+        .price-tag { font-size: 28px; color: #00ff88; font-weight: bold; margin-bottom: 5px; }
+        .min-bid-info { font-size: 14px; color: #aaa; margin-bottom: 15px; }
+        
+        /* 表單與按鈕 */
+        input { padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; width: 100%; margin-bottom: 8px; font-size: 16px; }
+        input:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s; }
+        .btn-gold { background: var(--gold); color: black; }
+        
+        #chat-msgs { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column-reverse; font-size: 14px; }
+        .user-tag { display: flex; align-items: center; gap: 8px; padding: 5px; border-bottom: 1px solid #222; }
+        .user-tag img { width: 24px; height: 24px; border-radius: 50%; background: #444; }
+        #publisher-info { font-size: 12px; color: #888; margin-top: 10px; border-top: 1px solid #333; padding-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <h1 style="color: var(--gold); margin-bottom: 5px;">輕鬆玩天堂-拍賣行</h1>
+        <div class="login-box">
+            <button class="google-btn" onclick="loginWithGoogle()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
+                Google 帳號登入
+            </button>
+            <button class="guest-btn" onclick="enterAsGuest()">遊客觀看模式</button>
+        </div>
+    </div>
+
+    <div id="main-app">
+        <div class="sidebar">
+            <div style="padding:15px; border-bottom:1px solid #333; font-weight:bold;">🟢 在線玩家</div>
+            <div id="user-list" style="overflow-y:auto; flex:1;"></div>
+        </div>
+
+        <div class="auction-container">
+            <div class="admin-panel" id="admin-box" style="display:none;">
+                <div style="font-size:12px; color:var(--gold); margin-bottom:8px; font-weight:bold;">⚙️ 管理員面板</div>
+                <input type="text" id="set-name" placeholder="商品名稱">
+                <input type="number" id="set-price" placeholder="起標底價">
+                <input type="number" id="set-min-increment" placeholder="最低加價幅度 (例如: 100)">
+                <input type="text" id="set-unit" placeholder="幣值 (如: 金幣)">
+                <button id="btn-launch" class="btn btn-gold" style="width:100%" onclick="launchAuction()">正式發布拍賣</button>
+                <button id="btn-reset" class="btn" style="width:100%; background:var(--red); color:white; display:none;" onclick="resetAuction()">結束並重置拍賣</button>
+            </div>
+
+            <div class="auction-card">
+                <h2 id="disp-item-name" style="margin:0; color:var(--gold);">等待開標...</h2>
+                <div class="timer" id="disp-timer">00:00</div>
+                <div class="price-tag">$ <span id="disp-price">0</span> <span id="disp-unit"></span></div>
+                <div id="disp-min-bid" class="min-bid-info">請等待開標</div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <input type="number" id="bid-amount" placeholder="出價金額..." style="flex:1; margin:0;">
+                    <button class="btn btn-gold" onclick="submitBid()">出價</button>
+                </div>
+                <div id="publisher-info">尚未開始</div>
+            </div>
+        </div>
+
+        <div class="chat-panel">
+            <div style="padding:15px; border-bottom:1px solid #333; font-weight:bold;">💬 即時聊天</div>
+            <div id="chat-msgs"></div>
+            <div style="padding:10px; border-top:1px solid #333;">
+                <input type="text" id="chat-input" placeholder="說點什麼..." onkeypress="if(event.keyCode==13) sendChat()" style="margin:0;">
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- ⚠️ 請貼上你的 Firebase Config ---
+    const firebaseConfig = {
+  apiKey: "AIzaSyA19M2lU6BCbxtlSOOcYm1Z_tWrsfo2T4s",
+  authDomain: "game-ffb82.firebaseapp.com",
+  databaseURL: "https://game-ffb82-default-rtdb.firebaseio.com",
+  projectId: "game-ffb82",
+  storageBucket: "game-ffb82.firebasestorage.app",
+  messagingSenderId: "458888690175",
+  appId: "1:458888690175:web:c5060beca640700a574fca",
+  measurementId: "G-VJ086JK4QN"
+};
+
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+    
+    let userData = { isGuest: true, name: "遊客", photo: "", uid: null };
+    let timerInterval = null;
+
+    const auctionRef = db.ref('current_auction');
+    const chatRef = db.ref('messages');
+    const usersRef = db.ref('online_users');
+
+    function loginWithGoogle() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).then((result) => {
+            userData = { isGuest: false, name: result.user.displayName, photo: result.user.photoURL, uid: result.user.uid };
+            enterApp();
+        });
+    }
+
+    function enterAsGuest() {
+        userData = { isGuest: true, name: "遊客_" + Math.floor(Math.random()*100), photo: "https://www.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png", uid: 'guest_' + Date.now() };
+        enterApp();
+    }
+
+    function enterApp() {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'flex';
+        if (!userData.isGuest) document.getElementById('admin-box').style.display = 'block';
+        const myUserRef = usersRef.push();
+        myUserRef.set({ name: userData.name, photo: userData.photo, role: userData.isGuest ? "guest" : "member" });
+        myUserRef.onDisconnect().remove();
+        startSyncing();
+    }
+
+    function startSyncing() {
+        auctionRef.on('value', snap => {
+            const data = snap.val();
+            if(!data) return;
+
+            document.getElementById('disp-item-name').innerText = data.itemName;
+            document.getElementById('disp-price').innerText = data.price.toLocaleString();
+            document.getElementById('disp-unit').innerText = data.unit;
+            document.getElementById('disp-timer').innerText = `00:${data.timeLeft < 10 ? '0'+data.timeLeft : data.timeLeft}`;
+            document.getElementById('publisher-info').innerText = `發布者: ${data.publisherName || '系統'} | 領先者: ${data.highestBidder || '無'}`;
+            
+            // 更新最低加價顯示
+            const minNextBid = data.price + (data.minIncrement || 0);
+            document.getElementById('disp-min-bid').innerText = `下次最低出價：${minNextBid.toLocaleString()} ${data.unit}`;
+
+            const currentUser = firebase.auth().currentUser;
+            const isPublisher = (currentUser && currentUser.uid === data.publisherUid);
+            const active = data.active;
+
+            document.getElementById('set-name').disabled = active;
+            document.getElementById('set-price').disabled = active;
+            document.getElementById('set-min-increment').disabled = active;
+            document.getElementById('set-unit').disabled = active;
+            document.getElementById('btn-launch').style.display = active ? 'none' : 'block';
+            document.getElementById('btn-reset').style.display = (active && isPublisher) ? 'block' : 'none';
+
+            stopLocalTimer();
+            if (active && isPublisher && data.timeLeft > 0) {
+                timerInterval = setInterval(() => {
+                    auctionRef.child('timeLeft').transaction(t => {
+                        if (t <= 1) { finishAuction(data); return 0; }
+                        return t - 1;
+                    });
+                }, 1000);
+            }
+        });
+
+        chatRef.limitToLast(15).on('child_added', snap => {
+            const m = snap.val();
+            const div = document.createElement('div');
+            div.style.marginBottom = "8px";
+            div.innerHTML = `<b style="color:${m.role==='system'?'#ff4444':(m.role==='guest'?'#888':'#ffcc00')}">${m.name}:</b> ${m.text}`;
+            document.getElementById('chat-msgs').prepend(div);
+        });
+
+        usersRef.on('value', snap => {
+            const listUI = document.getElementById('user-list');
+            listUI.innerHTML = "";
+            snap.forEach(child => {
+                const u = child.val();
+                listUI.innerHTML += `<div class="user-tag"><img src="${u.photo}"> ${u.name}</div>`;
+            });
+        });
+    }
+
+    function launchAuction() {
+        if(userData.isGuest) return alert("遊客無法發布");
+        const name = document.getElementById('set-name').value;
+        const price = parseInt(document.getElementById('set-price').value);
+        const minInc = parseInt(document.getElementById('set-min-increment').value) || 0;
+        const unit = document.getElementById('set-unit').value || "G";
+        
+        if(!name || isNaN(price)) return alert("請輸入完整資訊");
+
+        auctionRef.set({
+            itemName: name,
+            price: price,
+            minIncrement: minInc, // 存入最低加價幅度
+            unit: unit,
+            timeLeft: 60,
+            active: true,
+            publisherName: userData.name,
+            publisherUid: userData.uid,
+            highestBidder: "無"
+        });
+    }
+
+    function submitBid() {
+        if(userData.isGuest) return alert("❌ 遊客無法競標！");
+        const bid = parseInt(document.getElementById('bid-amount').value);
+        
+        auctionRef.once('value', snap => {
+            const data = snap.val();
+            if(!data || !data.active) return alert("拍賣未開始");
+            
+            // 核心邏輯：判斷出價是否達到最低門檻
+            const minRequired = data.price + (data.minIncrement || 0);
+            
+            if(bid >= minRequired) {
+                auctionRef.update({ 
+                    price: bid, 
+                    highestBidder: userData.name,
+                    timeLeft: 20 
+                });
+                chatRef.push({ name: "🔨 競標", text: `${userData.name} 出價 ${bid} ${data.unit}！`, role: 'system' });
+                document.getElementById('bid-amount').value = "";
+            } else {
+                alert(`出價不足！這件商品每次至少需加價 ${data.minIncrement} ${data.unit}，請出價 ${minRequired} 以上。`);
+            }
+        });
+    }
+
+    function finishAuction(data) {
+        stopLocalTimer();
+        auctionRef.update({ active: false });
+        const winner = data.highestBidder === "無" ? "無人得標" : data.highestBidder;
+        const resultMsg = `🎊 結標！【${winner}】以 ${data.price} ${data.unit} 得標！`;
+        chatRef.push({ name: "📢 系統", text: resultMsg, role: 'system' });
+        alert(resultMsg);
+    }
+
+    function resetAuction() {
+        if(confirm("確定重置？")) { stopLocalTimer(); auctionRef.update({ active: false, timeLeft: 0 }); }
+    }
+
+    function sendChat() {
+        if(userData.isGuest) return alert("遊客無法發言");
+        const input = document.getElementById('chat-input');
+        if(!input.value) return;
+        chatRef.push({ name: userData.name, text: input.value, role: 'member' });
+        input.value = "";
+    }
+
+    function stopLocalTimer() { if(timerInterval) { clearInterval(timerInterval); timerInterval = null; } }
+</script>
+</body>
+</html>

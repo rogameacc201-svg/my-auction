@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>輕鬆玩天堂-拍賣會</title>
+    <title>👑 輕鬆玩天堂 - 拍賣行</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
@@ -41,7 +41,7 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             position: sticky; top: 0; z-index: 1500;
         }
-        header h1 { margin: 0; font-size: 20px; color: var(--gold); letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,204,0,0.5); }
+        header h1 { margin: 0; font-size: 20px; color: var(--gold); letter-spacing: 2px; }
         #top-broadcast { font-size: 14px; color: var(--red); font-weight: bold; margin-top: 5px; }
 
         #login-screen { position: fixed; inset: 0; background: #121212; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
@@ -68,7 +68,6 @@
         .price-tag { font-size: 32px; color: var(--green); font-weight: bold; }
         
         input { padding: 12px; border-radius: 8px; border: 1px solid #444; background: rgba(0,0,0,0.5); color: white; width: 100%; font-size: 15px; outline: none; }
-        input:focus { border-color: var(--gold); }
         .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
         .btn-gold { background: var(--gold); color: black; }
         .btn-blue { background: var(--blue); color: white; margin-top: 8px; width: 100%; }
@@ -80,15 +79,15 @@
 <body>
 
     <header>
-        <h1>輕鬆玩天堂-拍賣會</h1>
-        <div id="top-broadcast">請稍後，等待拍賣開始...</div>
+        <h1>👑 輕鬆玩天堂 - 拍賣行</h1>
+        <div id="top-broadcast">等待競標開始...</div>
     </header>
 
     <div id="login-screen">
         <img src="bg.png" style="width: 150px; margin-bottom: 20px; border-radius: 20px;">
-        <h1 style="color: var(--gold); margin-bottom: 30px;">輕鬆玩天堂-拍賣會</h1>
+        <h1 style="color: var(--gold); margin-bottom: 30px;">👑 輕鬆玩天堂 - 拍賣行</h1>
         <div class="login-box">
-            <button class="btn" style="background:white; color:#333;" onclick="loginWithGoogle()">Google 快速登入</button>
+            <button class="btn" style="background:white; color:#333;" onclick="loginWithGoogle()">Google 登入</button>
             <div style="border-top:1px solid #333; margin-top:10px; padding-top:20px; display:flex; flex-direction:column; gap:10px;">
                 <input type="text" id="guest-name-input" placeholder="遊客暱稱...">
                 <button class="btn" style="background:#444; color:white;" onclick="enterAsGuest()">進入大廳</button>
@@ -99,14 +98,14 @@
     <div id="main-app">
         <div class="sidebar-left">
             <div class="user-panel">
-                <div class="panel-title"><span>👥 在線名單</span><button class="btn-small" onclick="clearUserList()">清除幽靈</button></div>
+                <div class="panel-title"><span>👥 在線名單</span><button class="btn-small" onclick="clearUserList()">重整</button></div>
                 <div id="user-list" class="scroll-area"></div>
             </div>
             <div class="chat-panel">
-                <div class="panel-title">💬 玩家對話區</div>
+                <div class="panel-title">💬 聊天室</div>
                 <div id="chat-msgs" class="scroll-area"></div>
                 <div style="padding:10px; border-top:1px solid #444; background:rgba(0,0,0,0.3);">
-                    <input type="text" id="chat-input" placeholder="按 Enter 傳送..." onkeypress="if(event.keyCode==13) sendChat()">
+                    <input type="text" id="chat-input" placeholder="說點什麼..." onkeypress="if(event.keyCode==13) sendChat()">
                 </div>
             </div>
         </div>
@@ -116,35 +115,35 @@
                 <input type="text" id="set-name" placeholder="商品名稱">
                 <div style="display:flex; gap:5px; margin-bottom:8px;">
                     <input type="number" id="set-price" placeholder="底價">
-                    <input type="number" id="set-min-increment" placeholder="最低加價">
+                    <input type="number" id="set-min-increment" placeholder="加價幅度">
                 </div>
                 <input type="text" id="set-unit" placeholder="幣值單位" value="金幣">
-                <button id="btn-launch" class="btn btn-gold" style="width:100%; margin-top:10px;" onclick="launchAuction()">發布拍賣項目</button>
-                <button id="btn-reset" class="btn" style="width:100%; background:var(--red); color:white; display:none; margin-top:5px;" onclick="resetAuction()">清理版面</button>
+                <button id="btn-launch" class="btn btn-gold" style="width:100%; margin-top:10px;" onclick="launchAuction()">發布拍賣</button>
+                <button id="btn-reset" class="btn" style="width:100%; background:var(--red); color:white; display:none; margin-top:5px;" onclick="resetAuction()">重置版面</button>
             </div>
 
             <div class="auction-card">
-                <h2 id="disp-item-name" style="margin:0; color:var(--gold);">等待發佈商品...</h2>
-                <div id="disp-publisher" style="font-size:12px; color:#aaa; margin-bottom:5px;">發布者：-</div>
+                <h2 id="disp-item-name" style="margin:0; color:var(--gold);">等待開標...</h2>
+                <div id="disp-publisher" style="font-size:12px; color:#aaa;">發布者：-</div>
                 <div class="timer" id="disp-timer">00:00</div>
                 <div class="price-tag">$ <span id="disp-price">0</span> <span id="disp-unit">金幣</span></div>
-                <div id="disp-min-bid" style="font-size:13px; color:#ccc; margin:10px 0;">目前無人出價</div>
+                <div id="disp-min-bid" style="font-size:13px; color:#ccc; margin:10px 0;">-</div>
                 <div style="display:flex; gap:8px;">
-                    <input type="number" id="bid-amount" placeholder="輸入金額..." style="flex:1;">
+                    <input type="number" id="bid-amount" placeholder="金額..." style="flex:1;">
                     <button class="btn btn-gold" onclick="submitBid()">出價</button>
                 </div>
-                <button id="btn-quick-bid" class="btn btn-blue" onclick="quickBid()">快速出價</button>
+                <button id="btn-quick-bid" class="btn btn-blue" onclick="quickBid()">一鍵出價</button>
             </div>
         </div>
 
         <div class="history-panel">
-            <div class="panel-title" style="color:var(--green);">📜 成交歷史紀錄</div>
+            <div class="panel-title" style="color:var(--green);">📜 歷史成交</div>
             <div id="history-list" class="scroll-area"></div>
         </div>
     </div>
 
 <script>
-    // --- Firebase 配置 (請自行補上代碼) ---
+    // --- Firebase 配置 (請保持你的配置) ---
     const firebaseConfig = {
   apiKey: "AIzaSyA19M2lU6BCbxtlSOOcYm1Z_tWrsfo2T4s",
   authDomain: "game-ffb82.firebaseapp.com",
@@ -196,7 +195,7 @@
         myUserRef.onDisconnect().remove();
     }
 
-    function clearUserList() { if(confirm("確定重整所有在線人數嗎？")) usersRef.remove().then(() => registerMe()); }
+    function clearUserList() { if(confirm("重整名單？")) usersRef.remove().then(() => registerMe()); }
 
     function startSyncing() {
         auctionRef.on('value', snap => {
@@ -205,11 +204,15 @@
             document.getElementById('disp-publisher').innerText = `發布者：${data.publisherName || '系統'}`;
             document.getElementById('disp-price').innerText = data.price.toLocaleString();
             document.getElementById('disp-unit').innerText = data.unit || "金幣";
-            document.getElementById('disp-timer').innerText = `00:${data.timeLeft < 10 ? '0'+data.timeLeft : data.timeLeft}`;
+            
+            // 時間顯示轉換
+            const m = Math.floor(data.timeLeft / 60);
+            const s = data.timeLeft % 60;
+            document.getElementById('disp-timer').innerText = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
             
             const next = data.price + (data.minIncrement || 0);
-            document.getElementById('disp-min-bid').innerText = data.active ? `下一次最低出價：$${next.toLocaleString()} ${data.unit}` : "拍賣未開始";
-            document.getElementById('btn-quick-bid').innerText = `快速加價至 $${next.toLocaleString()} ${data.unit}`;
+            document.getElementById('disp-min-bid').innerText = data.active ? `最低出價：$${next.toLocaleString()} ${data.unit}` : "拍賣未開始";
+            document.getElementById('btn-quick-bid').innerText = `一鍵出價 $${next.toLocaleString()}`;
             
             const isPub = (userData.uid === data.publisherUid);
             document.getElementById('btn-launch').style.display = data.active ? 'none' : 'block';
@@ -225,9 +228,8 @@
 
         chatRef.limitToLast(50).on('child_added', snap => {
             const m = snap.val();
-            if(m.role === 'system') {
-                document.getElementById('top-broadcast').innerText = `📢 ${m.text}`;
-            } else {
+            if(m.role === 'system') document.getElementById('top-broadcast').innerText = `📢 ${m.text}`;
+            else {
                 const box = document.getElementById('chat-msgs');
                 const div = document.createElement('div');
                 div.className = "msg-line";
@@ -255,29 +257,35 @@
     }
 
     function quickBid() {
-        if(userData.isGuest) return alert("遊客無法參與競標，請登入！");
+        if(userData.isGuest) return alert("請先登入！");
         auctionRef.once('value', snap => {
             const d = snap.val();
-            if(!d.active) return alert("拍賣尚未開始");
+            if(!d.active) return;
             executeBid(d.price + (d.minIncrement || 0), d.unit);
         });
     }
 
     function submitBid() {
-        if(userData.isGuest) return alert("遊客無法參與競標，請登入！");
+        if(userData.isGuest) return alert("請先登入！");
         const bid = parseInt(document.getElementById('bid-amount').value);
         auctionRef.once('value', snap => {
             const d = snap.val();
-            if(!d.active) return alert("拍賣尚未開始");
+            if(!d.active) return;
             if(bid >= d.price + (d.minIncrement || 0)) { executeBid(bid, d.unit); document.getElementById('bid-amount').value = ""; }
-            else alert("金額低於最低出價要求！");
+            else alert("金額不足");
         });
     }
 
-    // ⭐ 修改點：將出價後的補時設定為 60 秒
+    // ⭐ 補時邏輯修復：低於 10 秒才跳回 20 秒
     function executeBid(amt, unit) {
-        auctionRef.update({ price: amt, highestBidder: userData.name, timeLeft: 60 });
-        chatRef.push({ name: "🔨 競標", text: `${userData.name} 出價 $${amt.toLocaleString()} ${unit}`, role: 'system' });
+        auctionRef.once('value', snap => {
+            const data = snap.val();
+            let newTime = data.timeLeft;
+            if (data.timeLeft < 10) newTime = 20;
+
+            auctionRef.update({ price: amt, highestBidder: userData.name, timeLeft: newTime });
+            chatRef.push({ name: "🔨 競標", text: `${userData.name} 出價 $${amt.toLocaleString()} ${unit}`, role: 'system' });
+        });
     }
 
     function launchAuction() {
@@ -285,32 +293,32 @@
         const price = parseInt(document.getElementById('set-price').value);
         const inc = parseInt(document.getElementById('set-min-increment').value) || 0;
         const unit = document.getElementById('set-unit').value || "金幣";
-        if(!name || isNaN(price)) return alert("請填寫商品名稱與底價");
+        if(!name || isNaN(price)) return alert("請填寫資訊");
         
         auctionRef.set({ 
             itemName: name, price: price, minIncrement: inc, unit: unit,
-            active: true, timeLeft: 60, publisherName: userData.name, publisherUid: userData.uid, highestBidder: "無" 
+            active: true, timeLeft: 120, // ⭐ 初始設定為 2 分鐘
+            publisherName: userData.name, publisherUid: userData.uid, highestBidder: "無" 
         });
-        chatRef.push({ name: "📢 系統", text: `新拍賣：【${name}】由 ${userData.name} 發布`, role: 'system' });
+        chatRef.push({ name: "📢 系統", text: `新拍賣：【${name}】(2分鐘)`, role: 'system' });
     }
 
     function finishAuction(data) {
         auctionRef.update({ active: false });
         const winner = data.highestBidder;
-        const msg = winner === "無" ? "此物品流標。" : `恭喜！【${winner}】以 $${data.price} 標得 ${data.itemName}`;
+        const msg = winner === "無" ? "流標。" : `恭喜！【${winner}】標得 ${data.itemName}`;
         chatRef.push({ name: "📢 系統", text: msg, role: 'system' });
         if(winner !== "無") historyRef.push({ itemName: data.itemName, winner: winner, price: data.price, unit: data.unit });
     }
 
     function resetAuction() {
-        if(!confirm("確定要清理當前拍賣版面嗎？")) return;
-        auctionRef.update({ active: false, timeLeft: 0, itemName: "等待下一次拍賣...", price: 0, publisherName: "-", highestBidder: "無" });
+        if(!confirm("重置？")) return;
+        auctionRef.update({ active: false, timeLeft: 0, itemName: "等待下開標", price: 0, publisherName: "-", highestBidder: "無" });
     }
 
     function sendChat() {
         const input = document.getElementById('chat-input');
-        if(!input.value) return;
-        if(userData.isGuest) return alert("遊客無法發言，請先登入！");
+        if(!input.value || userData.isGuest) return;
         chatRef.push({ name: userData.name, text: input.value, role: 'member' });
         input.value = "";
     }

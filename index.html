@@ -109,7 +109,7 @@
     <div id="main-app">
         <div class="sidebar-left">
             <div class="user-panel">
-                <div class="panel-title"><span>👥 在線名單</span><button class="btn-small" onclick="clearUserList()">重整</button></div>
+                <div class="panel-title"><span>👥 在線名單</span></div>
                 <div id="user-list" class="scroll-area"></div>
             </div>
             <div class="chat-panel">
@@ -200,9 +200,7 @@
     function enterApp() {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'flex';
-        if (!userData.isGuest) {
-            document.getElementById('admin-box').style.display = 'block';
-        }
+        if (!userData.isGuest) document.getElementById('admin-box').style.display = 'block';
         db.ref(".info/connected").on("value", snap => { if(snap.val()) registerMe(); });
         startSyncing();
     }
@@ -213,7 +211,8 @@
         myUserRef.onDisconnect().remove();
     }
 
-    function clearUserList() { if(confirm("重整名單？")) usersRef.remove().then(() => registerMe()); }
+    // 移除了 clearUserList 函數
+
     function clearChat() { if(confirm("清空聊天？")) chatRef.remove(); }
 
     function startSyncing() {

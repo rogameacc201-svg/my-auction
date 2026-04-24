@@ -58,26 +58,6 @@
         .win-info { font-size: 18px; color: #eee; line-height: 1.6; }
         .winner-name { color: var(--green); font-weight: bold; font-size: 22px; }
 
-        /* 右下角取消按鈕樣式 */
-        #cancel-auction-btn {
-            position: fixed;
-            right: 20px;
-            bottom: 20px;
-            z-index: 9999;
-            background: var(--red);
-            color: white;
-            border: 2px solid white;
-            padding: 15px 25px;
-            border-radius: 50px;
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(255,0,0,0.4);
-            cursor: pointer;
-            display: none; /* 預設隱藏，登入後顯示 */
-            transition: transform 0.2s, background 0.2s;
-        }
-        #cancel-auction-btn:hover { background: #cc0000; transform: scale(1.05); }
-        #cancel-auction-btn:active { transform: scale(0.95); }
-
         /* 通用介面 */
         #login-screen { position: fixed; inset: 0; background: #121212; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
         .login-box { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 10px; }
@@ -105,8 +85,6 @@
         <h1>👑 輕鬆玩天堂-專業拍賣系統</h1>
         <div id="top-broadcast">等待競標開始...</div>
     </header>
-
-    <button id="cancel-auction-btn" onclick="cancelCurrentAuction()">🚫 取消目前競標</button>
 
     <div id="win-popup-overlay">
         <div id="win-popup">
@@ -222,10 +200,8 @@
     function enterApp() {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'flex';
-        // 如果不是遊客，顯示管理與取消按鈕
         if (!userData.isGuest) {
             document.getElementById('admin-box').style.display = 'block';
-            document.getElementById('cancel-auction-btn').style.display = 'block';
         }
         db.ref(".info/connected").on("value", snap => { if(snap.val()) registerMe(); });
         startSyncing();
@@ -239,19 +215,6 @@
 
     function clearUserList() { if(confirm("重整名單？")) usersRef.remove().then(() => registerMe()); }
     function clearChat() { if(confirm("清空聊天？")) chatRef.remove(); }
-
-    // ⭐ 取消競標函數
-    function cancelCurrentAuction() {
-        auctionRef.once('value', snap => {
-            const data = snap.val();
-            if(!data || !data.active) return alert("目前沒有正在進行的拍賣");
-            
-            if(confirm(`確定要取消【${data.itemName}】的競標嗎？`)) {
-                auctionRef.update({ active: false, endTime: 0 });
-                chatRef.push({ name: "📢 系統", text: `⚠️ 拍賣【${data.itemName}】已被管理員取消！`, role: 'system' });
-            }
-        });
-    }
 
     function startSyncing() {
         auctionRef.on('value', snap => {

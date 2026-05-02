@@ -1,1 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>⚔️ 輕鬆玩天堂討論區 ⚔️</title>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --border-color: #bfa05d;
+            --header-bg: #201a16;
+            --text-main: #d1ccbc;
+            --text-accent: #ffcc00;
+            --input-bg: #1a1a1a;
+            --gold-gradient: linear-gradient(180deg, #bfa05d 0%, #7a6331 100%);
+        }
 
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: "Microsoft JhengHei", serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+
+        /* 頂部裝飾 */
+        .forum-header {
+            background-color: var(--header-bg);
+            border: 2px solid var(--border-color);
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .forum-header h1 { color: var(--text-accent); margin: 0; text-shadow: 2px 2px 4px #000; }
+
+        /* 區塊顯示控制 */
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+
+        /* 按鈕樣式 */
+        .btn {
+            background: var(--gold-gradient);
+            border: 1px solid #000;
+            color: #000;
+            padding: 10px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        .btn:hover { filter: brightness(1.2); }
+        .btn-back { background: #444; color: #fff; margin-bottom: 20px; }
+
+        /* 列表樣式 */
+        .forum-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            background: #151515;
+        }
+
+        th { background: #2c2c2c; color: var(--border-color); padding: 12px; border-bottom: 1px solid var(--border-color); }
+        td { padding: 15px 12px; border-bottom: 1px solid #333; cursor: pointer; }
+        tr:hover { background-color: #2a2215; }
+
+        /* 發文與回覆表單 */
+        .post-form {
+            background: #1c1c1c;
+            border: 2px solid var(--border-color);
+            padding: 25px;
+            border-radius: 4px;
+        }
+
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 8px; color: var(--border-color); }
+        input, textarea {
+            width: 100%; padding: 12px; background: var(--input-bg);
+            border: 1px solid #555; color: #fff; box-sizing: border-box;
+        }
+
+        /* 主題內容顯示 */
+        .topic-content {
+            background: #222;
+            border: 1px solid #444;
+            padding: 20px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .topic-info { border-bottom: 1px solid var(--border-color); margin-bottom: 15px; padding-bottom: 10px; }
+        .author { color: #88bcff; font-weight: bold; }
+
+        .footer { text-align: center; padding: 40px; color: #555; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="forum-header">
+        <h1>🛡️ 亞丁冒險者公會 🛡️</h1>
+    </div>
+
+    <!-- 1. 首頁列表 -->
+    <div id="home-page" class="page-section active">
+        <button class="btn" onclick="showSection('post-page')">⚔️ 發起新的主題</button>
+        <table class="forum-table">
+            <thead>
+                <tr>
+                    <th align="left">冒險主題</th>
+                    <th width="150">發佈者</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr onclick="viewTopic('關於伺服器 3.8C 寵物系統', '精靈長老', '請問有人知道勝利果實去哪裡打嗎？我找了好久都沒看到。')">
+                    <td>[問題] 關於伺服器 3.8C 寵物系統</td>
+                    <td class="author">精靈長老</td>
+                </tr>
+                <tr onclick="viewTopic('MySQL 資料庫優化心得', '技術宅', '這是我最近整理的 SQL 優化腳本，分享給大家參考。')">
+                    <td>[心得] MySQL 資料庫優化心得</td>
+                    <td class="author">技術宅</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 2. 發佈主題頁面 -->
+    <div id="post-page" class="page-section">
+        <button class="btn btn-back" onclick="showSection('home-page')">← 返回列表</button>
+        <div class="post-form">
+            <h2 style="color: var(--text-accent); margin-top:0;">📜 撰寫新的羊皮紙訊息</h2>
+            <div class="input-group">
+                <label>冒險者名稱</label>
+                <input type="text" id="post-name" placeholder="輸入你的稱號...">
+            </div>
+            <div class="input-group">
+                <label>主題標題</label>
+                <input type="text" id="post-title" placeholder="標題內容...">
+            </div>
+            <div class="input-group">
+                <label>訊息內容</label>
+                <textarea id="post-content" placeholder="內容..."></textarea>
+            </div>
+            <button class="btn" onclick="alert('訊息已送出！(此為演示)'); showSection('home-page')">確認發佈</button>
+        </div>
+    </div>
+
+    <!-- 3. 主題內容與回覆頁面 -->
+    <div id="view-page" class="page-section">
+        <button class="btn btn-back" onclick="showSection('home-page')">← 返回列表</button>
+        
+        <div class="topic-content">
+            <div class="topic-info">
+                <h2 id="display-title" style="color: var(--text-accent); margin:0;"></h2>
+                <p>發佈者：<span class="author" id="display-author"></span></p>
+            </div>
+            <div id="display-content"></div>
+        </div>
+
+        <div class="post-form" style="border-style: dashed;">
+            <h3 style="color: var(--text-accent); margin-top:0;">💬 發表回覆</h3>
+            <div class="input-group">
+                <label>冒險者名稱</label>
+                <input type="text" placeholder="輸入你的稱號...">
+            </div>
+            <div class="input-group">
+                <label>回覆內容</label>
+                <textarea placeholder="寫下你的見解..."></textarea>
+            </div>
+            <button class="btn" onclick="alert('回覆成功！'); showSection('home-page')">送出評論</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        願殷海薩的祝福與你同在。
+    </div>
+</div>
+
+<script>
+    // 切換顯示區塊的函數
+    function showSection(sectionId) {
+        // 隱藏所有區塊
+        document.querySelectorAll('.page-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        // 顯示目標區塊
+        document.getElementById(sectionId).classList.add('active');
+        // 捲動到頂部
+        window.scrollTo(0, 0);
+    }
+
+    // 查看主題內容
+    function viewTopic(title, author, content) {
+        document.getElementById('display-title').innerText = title;
+        document.getElementById('display-author').innerText = author;
+        document.getElementById('display-content').innerText = content;
+        showSection('view-page');
+    }
+</script>
+
+</body>
+</html>

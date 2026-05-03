@@ -65,7 +65,7 @@
         #main-app { display: none; flex-wrap: wrap; padding: 15px; gap: 15px; justify-content: center; }
         .sidebar-left { width: 100%; max-width: 280px; display: flex; flex-direction: column; gap: 15px; }
         .user-panel, .chat-panel, .history-panel { background: var(--card); border-radius: 12px; border: 1px solid #444; backdrop-filter: blur(5px); display: flex; flex-direction: column; }
-        .user-panel { height: 180px; } .chat-panel { height: 350px; } .history-panel { width: 100%; max-width: 320px; height: 545px; } /* 微調寬度 */
+        .user-panel { height: 180px; } .chat-panel { height: 350px; } .history-panel { width: 100%; max-width: 320px; height: 545px; } 
         
         .panel-title { padding: 10px; background: rgba(0,0,0,0.5); font-size: 16px; color: var(--gold); border-bottom: 1px solid #444; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         
@@ -85,15 +85,101 @@
         .btn-blue { background: var(--blue); color: white; margin-top: 8px; width: 100%; }
         .btn-small { font-size: 13px; padding: 3px 8px; background: #333; color: #ccc; border: 1px solid #555; cursor: pointer; }
 
+        /* 跟蹤選單樣式 */
+        .floating-menu {
+            position: fixed;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 4000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .floating-menu.hidden { transform: translateY(-50%) translateX(85px); }
+
+        .menu-item {
+            width: 65px;
+            height: 65px;
+            background: rgba(30, 30, 30, 0.95);
+            border: 2px solid var(--gold);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--gold);
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            position: relative;
+        }
+        .menu-item:hover { background: var(--gold); color: black; transform: scale(1.1); }
+        .menu-icon { font-size: 22px; margin-bottom: 2px; }
+        .menu-text { font-size: 12px; font-weight: bold; }
+
+        .menu-toggle-tag {
+            position: absolute;
+            left: -30px; top: 50%; transform: translateY(-50%);
+            background: rgba(30, 30, 30, 0.9);
+            border: 2px solid var(--gold); border-right: none;
+            color: var(--gold); width: 30px; height: 50px;
+            border-radius: 10px 0 0 10px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 18px; box-shadow: -4px 0 10px rgba(0,0,0,0.5);
+        }
+
+        /* 新增：手機瀏覽器引導提示樣式 */
+        #browser-guide {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: flex-start;
+            padding-top: 40px; text-align: center; color: white;
+        }
+        .guide-arrow { position: absolute; right: 30px; top: 10px; font-size: 50px; color: var(--gold); animation: bounce 1s infinite; }
+        .guide-box { width: 85%; background: #222; border: 2px solid var(--gold); border-radius: 20px; padding: 30px; margin-top: 50px; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
         @media (min-width: 1200px) { #main-app { flex-wrap: nowrap; } }
+        @media (max-width: 600px) {
+            .floating-menu { right: 10px; }
+            .menu-item { width: 55px; height: 55px; }
+            .menu-text { font-size: 10px; }
+            .floating-menu.hidden { transform: translateY(-50%) translateX(75px); }
+        }
     </style>
 </head>
 <body>
+
+    <!-- 手機瀏覽器引導遮罩 -->
+    <div id="browser-guide" onclick="this.style.display='none'">
+        <div class="guide-arrow">⤴</div>
+        <div class="guide-box">
+            <h2 style="color:var(--gold); margin-top:0;">請使用外部瀏覽器開啟</h2>
+            <p style="font-size:18px; line-height:1.6;">偵測到您正在使用社群軟體內置網頁。<br><br>請點擊右上角 <b style="color:var(--gold); font-size:24px;">「...」</b><br>並選擇 <b style="color:var(--green); font-size:24px;">「在瀏覽器開啟」</b><br>以獲得最佳拍賣體驗與登入功能。</p>
+            <button class="btn btn-gold" style="width:100%; margin-top:20px;">我知道了 (點擊關閉)</button>
+        </div>
+    </div>
 
     <header>
         <h1>👑 輕鬆玩天堂-專業拍賣系統</h1>
         <div id="top-broadcast">等待競標開始...</div>
     </header>
+
+    <!-- 跟蹤選單 (含收合功能) -->
+    <div class="floating-menu" id="side-nav">
+        <div class="menu-toggle-tag" onclick="toggleMenu()">
+            <span id="toggle-arrow">❯</span>
+        </div>
+        <a href="https://rogameacc201-svg.github.io/my-auction/" target="_blank" class="menu-item">
+            <span class="menu-icon">⚖️</span>
+            <span class="menu-text">拍賣場</span>
+        </a>
+        <a href="https://rogameacc201-svg.github.io/-/" target="_blank" class="menu-item">
+            <span class="menu-icon">💬</span>
+            <span class="menu-text">討論區</span>
+        </a>
+    </div>
 
     <div id="win-popup-overlay">
         <div id="win-popup">
@@ -166,16 +252,34 @@
     </div>
 
 <script>
+    /* 新增：偵測內建瀏覽器邏輯 */
+    window.onload = function() {
+        const ua = navigator.userAgent.toLowerCase();
+        // 偵測 LINE, FB, IG, 微信 等內置瀏覽器
+        const isSocialBrowser = ua.indexOf('line') > -1 || ua.indexOf('fbav') > -1 || ua.indexOf('instagram') > -1 || ua.indexOf('micromessenger') > -1;
+        
+        if (isSocialBrowser) {
+            document.getElementById('browser-guide').style.display = 'flex';
+        }
+    };
+
+    function toggleMenu() {
+        const nav = document.getElementById('side-nav');
+        const arrow = document.getElementById('toggle-arrow');
+        nav.classList.toggle('hidden');
+        arrow.innerText = nav.classList.contains('hidden') ? '❮' : '❯';
+    }
+
     const firebaseConfig = {
-  apiKey: "AIzaSyA19M2lU6BCbxtlSOOcYm1Z_tWrsfo2T4s",
-  authDomain: "game-ffb82.firebaseapp.com",
-  databaseURL: "https://game-ffb82-default-rtdb.firebaseio.com",
-  projectId: "game-ffb82",
-  storageBucket: "game-ffb82.firebasestorage.app",
-  messagingSenderId: "458888690175",
-  appId: "1:458888690175:web:c5060beca640700a574fca",
-  measurementId: "G-VJ086JK4QN"
-};
+      apiKey: "AIzaSyA19M2lU6BCbxtlSOOcYm1Z_tWrsfo2T4s",
+      authDomain: "game-ffb82.firebaseapp.com",
+      databaseURL: "https://game-ffb82-default-rtdb.firebaseio.com",
+      projectId: "game-ffb82",
+      storageBucket: "game-ffb82.firebasestorage.app",
+      messagingSenderId: "458888690175",
+      appId: "1:458888690175:web:c5060beca640700a574fca",
+      measurementId: "G-VJ086JK4QN"
+    };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
@@ -285,7 +389,7 @@
             snap.forEach(child => {
                 const h = child.val();
                 const div = document.createElement('div');
-                div.style.marginBottom = "15px"; // 增加歷史紀錄間距
+                div.style.marginBottom = "15px"; 
                 div.style.borderBottom = "1px solid rgba(255,255,255,0.1)";
                 div.style.paddingBottom = "10px";
                 div.innerHTML = `🏆 <b style="color:var(--gold)">${h.itemName}</b><br><span style="color:#ddd; font-size:17px;">得標者: ${h.winner}</span><br><span style="color:var(--green)">$${h.price.toLocaleString()} ${h.unit}</span>`;

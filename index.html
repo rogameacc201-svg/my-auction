@@ -81,33 +81,39 @@
         .btn-blue { background: var(--blue); color: white; margin-top: 8px; width: 100%; }
         .btn-small { font-size: 13px; padding: 3px 8px; background: #333; color: #ccc; border: 1px solid #555; cursor: pointer; }
 
-        /* 跟蹤選單 */
-        .floating-menu { position: fixed; right: 15px; top: 50%; transform: translateY(-50%); z-index: 4000; display: flex; flex-direction: column; gap: 12px; transition: transform 0.4s; }
+        /* 跟蹤選單 (可收合) */
+        .floating-menu { position: fixed; right: 15px; top: 50%; transform: translateY(-50%); z-index: 4000; display: flex; flex-direction: column; gap: 12px; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .floating-menu.hidden { transform: translateY(-50%) translateX(85px); }
         .menu-item { width: 65px; height: 65px; background: rgba(30, 30, 30, 0.95); border: 2px solid var(--gold); border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: var(--gold); transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.6); backdrop-filter: blur(5px); position: relative; }
         .menu-item:hover { background: var(--gold); color: black; transform: scale(1.1); }
         .menu-icon { font-size: 22px; margin-bottom: 2px; }
         .menu-text { font-size: 12px; font-weight: bold; }
-        .menu-toggle-tag { position: absolute; left: -30px; top: 50%; transform: translateY(-50%); background: rgba(30, 30, 30, 0.9); border: 2px solid var(--gold); border-right: none; color: var(--gold); width: 30px; height: 50px; border-radius: 10px 0 0 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
+        .menu-toggle-tag { position: absolute; left: -30px; top: 50%; transform: translateY(-50%); background: rgba(30, 30, 30, 0.9); border: 2px solid var(--gold); border-right: none; color: var(--gold); width: 30px; height: 50px; border-radius: 10px 0 0 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; box-shadow: -4px 0 10px rgba(0,0,0,0.5); }
 
-        /* 引導提示 */
+        /* 手機瀏覽器引導提示 */
         #browser-guide { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 40px; text-align: center; color: white; }
         .guide-arrow { position: absolute; right: 30px; top: 10px; font-size: 50px; color: var(--gold); animation: bounce 1s infinite; }
         .guide-box { width: 85%; background: #222; border: 2px solid var(--gold); border-radius: 20px; padding: 30px; margin-top: 50px; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
         @media (min-width: 1200px) { #main-app { flex-wrap: nowrap; } }
-        @media (max-width: 600px) { .floating-menu.hidden { transform: translateY(-50%) translateX(75px); } }
+        @media (max-width: 600px) {
+            .floating-menu { right: 10px; }
+            .menu-item { width: 55px; height: 55px; }
+            .menu-text { font-size: 10px; }
+            .floating-menu.hidden { transform: translateY(-50%) translateX(75px); }
+        }
     </style>
 </head>
 <body>
 
+    <!-- 手機瀏覽器引導遮罩 -->
     <div id="browser-guide" onclick="this.style.display='none'">
         <div class="guide-arrow">⤴</div>
         <div class="guide-box">
-            <h2 style="color:var(--gold);">請使用外部瀏覽器開啟</h2>
-            <p>偵測到內置網頁，請點擊右上角「...」並選擇「在瀏覽器開啟」以獲得登入功能。</p>
-            <button class="btn btn-gold" style="width:100%;">我知道了</button>
+            <h2 style="color:var(--gold); margin-top:0;">請使用外部瀏覽器開啟</h2>
+            <p style="font-size:18px; line-height:1.6;">偵測到內置網頁，部分登入功能將受限。<br><br>請點擊右上角 <b style="color:var(--gold); font-size:24px;">「...」</b><br>並選擇 <b style="color:var(--green); font-size:24px;">「在瀏覽器開啟」</b><br>以獲得完整功能。</p>
+            <button class="btn btn-gold" style="width:100%; margin-top:20px;">我知道了</button>
         </div>
     </div>
 
@@ -116,10 +122,19 @@
         <div id="top-broadcast">等待競標開始...</div>
     </header>
 
+    <!-- 右側跟蹤選單 (含收合功能) -->
     <div class="floating-menu" id="side-nav">
-        <div class="menu-toggle-tag" onclick="toggleMenu()"><span id="toggle-arrow">❯</span></div>
-        <a href="https://rogameacc201-svg.github.io/my-auction/" target="_blank" class="menu-item"><span class="menu-icon">⚖️</span><span class="menu-text">拍賣場</span></a>
-        <a href="https://rogameacc201-svg.github.io/-/" target="_blank" class="menu-item"><span class="menu-icon">💬</span><span class="menu-text">討論區</span></a>
+        <div class="menu-toggle-tag" onclick="toggleMenu()">
+            <span id="toggle-arrow">❯</span>
+        </div>
+        <a href="https://rogameacc201-svg.github.io/my-auction/" target="_blank" class="menu-item">
+            <span class="menu-icon">⚖️</span>
+            <span class="menu-text">拍賣場</span>
+        </a>
+        <a href="https://rogameacc201-svg.github.io/-/" target="_blank" class="menu-item">
+            <span class="menu-icon">💬</span>
+            <span class="menu-text">討論區</span>
+        </a>
     </div>
 
     <div id="win-popup-overlay">
@@ -193,6 +208,7 @@
     </div>
 
 <script>
+    // 偵測內置瀏覽器
     window.onload = function() {
         const ua = navigator.userAgent.toLowerCase();
         if (ua.indexOf('line') > -1 || ua.indexOf('fbav') > -1 || ua.indexOf('instagram') > -1) {
@@ -200,6 +216,7 @@
         }
     };
 
+    // 切換右側選單顯示狀態
     function toggleMenu() {
         const nav = document.getElementById('side-nav');
         const arrow = document.getElementById('toggle-arrow');
@@ -260,13 +277,38 @@
         myUserRef.onDisconnect().remove();
     }
 
-    /* 邏輯更新：只有 Google 登入者可清除 */
+    // 清空聊天：立即清空畫面並同步 Firebase
     function clearChat() { 
-        if(userData.isGuest) return alert("只有登入用戶（管理員）可以清除聊天記錄！");
-        if(confirm("確認清空所有聊天訊息？")) chatRef.remove(); 
+        if(userData.isGuest) return alert("只有登入用戶可以清除聊天記錄！");
+        if(confirm("確認清空所有聊天訊息？")) {
+            // 立即反應在發起者畫面上
+            document.getElementById('chat-msgs').innerHTML = "";
+            chatRef.remove(); 
+        }
     }
 
     function startSyncing() {
+        // 監聽聊天：處理正常訊息與「全域清空」
+        chatRef.limitToLast(50).on('child_added', snap => {
+            const m = snap.val();
+            if(m.role === 'system') document.getElementById('top-broadcast').innerText = `📢 ${m.text}`;
+            else {
+                const box = document.getElementById('chat-msgs');
+                const div = document.createElement('div');
+                div.style.marginBottom = "10px";
+                div.innerHTML = `<b style="color:${m.role==='guest'?'#888':'var(--gold)'}">${m.name}:</b> ${m.text}`;
+                box.appendChild(div);
+                box.scrollTop = box.scrollHeight;
+            }
+        });
+
+        // 當資料庫節點被刪除時，同步清空所有人畫面
+        chatRef.on('value', snap => {
+            if (!snap.exists()) {
+                document.getElementById('chat-msgs').innerHTML = "";
+            }
+        });
+
         auctionRef.on('value', snap => {
             const data = snap.val(); if(!data) return;
             document.getElementById('disp-item-name').innerText = data.itemName || "等待中...";
@@ -312,19 +354,6 @@
             if ((Date.now() + serverTimeOffset - h.timestamp) < 5000) broadcastWinPopup(h);
         });
 
-        chatRef.limitToLast(50).on('child_added', snap => {
-            const m = snap.val();
-            if(m.role === 'system') document.getElementById('top-broadcast').innerText = `📢 ${m.text}`;
-            else {
-                const box = document.getElementById('chat-msgs');
-                const div = document.createElement('div');
-                div.style.marginBottom = "10px";
-                div.innerHTML = `<b style="color:${m.role==='guest'?'#888':'var(--gold)'}">${m.name}:</b> ${m.text}`;
-                box.appendChild(div);
-                box.scrollTop = box.scrollHeight;
-            }
-        });
-
         historyRef.on('value', snap => {
             const box = document.getElementById('history-list'); box.innerHTML = "";
             snap.forEach(child => {
@@ -355,9 +384,9 @@
         chatRef.push({ name: "📢 系統", text: `新拍賣：【${name}】(1分鐘)`, role: 'system' });
     }
 
-    /* 權限核心：執行出價前檢查是否為遊客 */
+    // 遊客禁止出價邏輯
     function executeBid(amt, unit) {
-        if(userData.isGuest) return alert("遊客帳號禁止參與競標！請先使用 Google 登入。");
+        if(userData.isGuest) return alert("遊客帳號禁止競標！請先登入 Google。");
         auctionRef.once('value', snap => {
             const data = snap.val();
             if(!data.active) return;
@@ -406,7 +435,7 @@
         auctionRef.once('value', snap => {
             const d = snap.val();
             if(d.active && bid >= d.price + (d.minIncrement || 0)) { executeBid(bid, d.unit); document.getElementById('bid-amount').value = ""; }
-            else if(d.active) alert("金額不足");
+            else if(d.active) alert("金額不足或權限不足");
         });
     }
 
